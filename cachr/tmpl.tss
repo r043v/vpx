@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="fr-FR"><head><meta charset="UTF-8">
+	<title>§title§</title>
+	<script src="/socket.io/socket.io.js"></script>
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+	<script src="/jquery-2.1.4.min.js"></script>
+<!-- 	<script src="circular-progress.min.js"></script> -->
+	<script src="circle-progress.js"></script>
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+	<script src="/video-js/video.js"></script>
+	<link rel="stylesheet" href="/video-js/video-js.min.css">
+	<style>
+		.starter-template { padding: 10px 10px; text-align: center; }
+		#thumbnail img { max-height:360px; }
+	</style>
+	<script>
+		videojs.options.flash.swf = "/video-js/video-js.swf";
+		$(document).ready(function(){
+			var filename, thumbnail,
+			$progress = $("#progress"),
+			$thumbnail = $("#thumbnail"),
+			$metadata = $("#metadata"),
+			$out = $("#out"),
+			$nfo = $("#nfo");
+			
+			/*var progress = new CircularProgress({
+				radius: 20,
+				strokeStyle: 'black',
+				lineCap: 'round',
+				lineWidth: 4
+			});	$progress.html(progress.el);*/
+			
+			$progress.circleProgress({ value:0, size:50, animation:{ duration:250 }  });
+			
+			var socket = io.connect();
+			
+			socket.on('connect',function(){
+				socket.on('update',function(o){
+					//progress.update(parseFloat(o.percent));
+					var val = parseFloat(o.percent)/100;
+					console.log( val );
+					$progress.circleProgress('value',parseFloat(o.percent)/100);
+					$nfo.html("<p>speed "+o.speed+"<br/>size "+o.size+"<br/>eta "+o.time+"<br/>percent "+o.percent+"</p>");
+				});
+				
+				socket.on('log',function(data){
+					$nfo.html("<p>"+data+"</p>");
+				});
+				
+				socket.on('done',function(data){
+					var f = filename;
+					$out.html('<a href="'+f+'">'+f+'</a>');
+
+					var $source = $("<source/>",{
+						src:filename,
+						type:'video/'+filename.split('.').pop()
+					});
+
+					var $video = $("<video controls/>",{
+						poster:thumbnail,
+						width:"100%",
+						dataSetup:"{}",
+						preload:"auto",
+						id:"lolwoot"
+					}).addClass("video-js vjs-default-skin vjs-big-play-centered").append($source);//.attr("id","lolwoot");
+					
+					$thumbnail.html($video);
+
+					$progress.hide();
+					setTimeout(function(){
+						videojs("lolwoot", {}, function(){});
+					},1);
+				});
+				
+				socket.on('filename',function(f){
+					filename = f;
+				});
+
+				socket.on('thumbnail',function(f){
+					thumbnail = f;
+					$thumbnail.html('<img src="'+f+'"/>');
+				});
+
+				socket.on('metadata',function(f){
+					$.get(f,function(m){
+						var nfo = [];
+						nfo.push(m.fulltitle);
+						nfo.push(m.uploader);
+						nfo.push(m.view_count);
+						nfo.push('<a href="'+f+'">metadata</a>');
+						$metadata.html(
+						'<ul><li>'+$.grep(nfo,function(n){ return(n) }).join("</li><li>")+'</li></ul>'
+						);
+					});
+				});
+				
+				§js§
+			});
+		});
+	</script>
+	<body>
+		<div class="container">
+			<div class="starter-template">
+				<h3>youtube video proxy</h1>
+				<p id="nfo"></p><p id="progress"></p>
+				<p class="lead" id="out">§content§</p>
+				<p id="thumbnail"></p>
+				<p id="metadata"></p>
+			</div>
+		</div>
+	</body>
+</html>

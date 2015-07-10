@@ -1,0 +1,15 @@
+{
+  "name": "vpx",
+  "version": "0.0.2",
+  "description": "youtube video proxy",
+  "author": "r- <noferov@gmail.com>",
+  "main": "app.js",
+  "dependencies": {
+    "express": "*",
+    "tss":"*",
+    "socket.io":"*",
+    "lodash":"*",
+    "watch":"*"
+  }
+}
+  
